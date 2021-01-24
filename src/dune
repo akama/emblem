@@ -1,0 +1,3 @@
+(library
+  (name emblem)
+  (libraries rresult fmt zarith))
