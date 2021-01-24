@@ -1,4 +1,4 @@
-(lang dune 2.8)
+(lang dune 2.7)
 (name emblem)
 
 (generate_opam_files true)
@@ -10,10 +10,10 @@
 
 (package
  (name emblem)
- (synopsis "A library for well typed, distributed, roughly ordered 128 bit ids.")
- (description "Allows for well typed, distributed, roughly ordered 128 bit ids.")
+ (synopsis "A library for well typed, distributed, roughly ordered 128 bit ids")
+ (description "Allows for well typed, distributed, roughly ordered 128 bit ids")
  (depends
-  (dune (> 2.8))
+  (dune (> 2.7))
   (zarith (> 1.9))
   (rresult (> 0.6))
   (fmt (> 0.8.8))))
