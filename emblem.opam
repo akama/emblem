@@ -9,6 +9,7 @@ authors: ["Adam Ringwood"]
 license: "MIT"
 homepage: "https://github.com/unrealakama/emblem"
 bug-reports: "https://github.com/unrealakama/emblem/issues"
+name: "emblem"
 depends: [
   "dune" {>= "2.7" & > "2.7"}
   "zarith" {> "1.9"}
