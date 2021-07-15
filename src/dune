@@ -1,4 +1,4 @@
 (library
   (name emblem)
   (public_name emblem)
-  (libraries rresult fmt zarith))
+  (libraries rresult fmt zarith yojson))

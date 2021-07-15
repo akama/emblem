@@ -15,8 +15,11 @@ module Id (B : IdBase) : sig
   val to_hex_string : t -> string
   val to_uuid_string : t -> string
   val to_z : t -> Z.t
+  val to_yojson : t -> Yojson.Safe.t
+  val of_yojson : Yojson.Safe.t -> (t, string) result
   val of_raw_string : string -> (t, [> R.msg ]) result
   val of_z : Z.t -> (t, [> R.msg ]) result
+  val of_uuid_string : string -> (t, [> R.msg ]) result
   val eq : t -> t -> bool
   val compare : t -> t -> int
   val pp : Format.formatter -> t -> unit
@@ -31,7 +34,7 @@ end = struct
   let to_hex_string = Z.format "%032x"
   let to_z t = t
   let to_uuid_string t =
-    let front = Z.((t asr 96)) |> Z.format "%08x" in
+    let front = Z.(t asr 96) |> Z.format "%08x" in
     let qlen = Z.(pow (add one one) 15 - one) in
     let qone = Z.((t asr 80) land qlen) |> Z.format "%04x" in
     let qtwo = Z.((t asr 64) land qlen) |> Z.format "%04x" in
@@ -44,14 +47,12 @@ end = struct
   let get_time t =
     let c = random_len + tag_len in
     Z.(t asr c) |> Z.to_float
-  let get_random t =
-    Z.((t asr tag_len) land max_random)
-  let get_tag t =
-    Z.(t land max_tag)
+  let get_random t = Z.((t asr tag_len) land max_random)
+  let get_tag t = Z.(t land max_tag)
   let verify t =
     let tag = get_tag t in
-    if (Z.equal tag B.tag) then
-      if (Z.compare t max_total < 0) then
+    if Z.equal tag B.tag then
+      if Z.compare t max_total < 0 then
         R.ok t
       else
         R.error_msg "Value is too large to fit inside a emblem id."
@@ -60,14 +61,25 @@ end = struct
   let of_raw_string s =
     let t = Z.of_bits s in
     verify t
-  let of_z t =
-    verify t
+  let of_z t = verify t
   let pp m t = Fmt.string m (to_uuid_string t)
+  let of_uuid_string s =
+    let i = String.(concat "" @@ split_on_char '-' s) |> Z.of_string_base 16 in
+    verify i
+  let of_yojson (j : Yojson.Safe.t) =
+    match j with
+    | `String s ->
+      ( match of_uuid_string s with
+      | Error (`Msg e) -> Error e
+      | Ok _ as o -> o
+      )
+    | _ -> Error "Value of key should be a string to convert to id."
+  let to_yojson t = `String (to_uuid_string t)
   let gen () =
     let back = String.init 16 (fun _ -> Char.chr (Random.int 256)) |> Z.of_bits in
     let safe_back = Z.(back land max_random) in
     let backend = Z.((safe_back lsl tag_len) + B.tag) in
-    let time = Unix.gettimeofday() *. 1000. |> Z.of_float in
+    let time = Unix.gettimeofday () *. 1000. |> Z.of_float in
     let front = Z.(time lsl 80) in
     Z.add front backend
 end
