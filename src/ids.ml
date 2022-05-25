@@ -5,7 +5,7 @@ module type IdBase = sig
   val tag : Z.t
 end
 
-module Id (B : IdBase) : sig
+module type IdSig = sig
   type t = private Z.t
   val gen : unit -> t
   val get_time : t -> float
@@ -23,7 +23,9 @@ module Id (B : IdBase) : sig
   val eq : t -> t -> bool
   val compare : t -> t -> int
   val pp : Format.formatter -> t -> unit
-end = struct
+end
+
+module Id (B : IdBase) : IdSig = struct
   type t = Z.t
   let random_len = (20 - B.tag_len) * 4
   let tag_len = B.tag_len * 4
