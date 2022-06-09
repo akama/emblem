@@ -8,6 +8,7 @@ end
 module type IdSig = sig
   type t = private Z.t
   val gen : unit -> t
+  val gen_with_seeds : int -> float -> unit -> t
   val get_time : t -> float
   val get_random : t -> Z.t
   val get_tag : t -> Z.t
@@ -84,4 +85,14 @@ module Id (B : IdBase) : IdSig = struct
     let time = Unix.gettimeofday () *. 1000. |> Z.of_float in
     let front = Z.(time lsl 80) in
     Z.add front backend
+
+  let gen_with_seeds seed ts () = 
+    let () = Random.init seed in 
+    let back = String.init 16 (fun _ -> Char.chr (Random.int 256)) |> Z.of_bits in
+    let safe_back = Z.(back land max_random) in
+    let backend = Z.((safe_back lsl tag_len) + B.tag) in
+    let time = ts *. 1000. |> Z.of_float in
+    let front = Z.(time lsl 80) in
+    Z.add front backend 
+
 end
